@@ -3,7 +3,7 @@
 A macOS menu-bar app that flashes your screen when you say a filler word on a call.
 
 It listens to your mic, transcribes short chunks of speech **locally** with Whisper
-(via [faster-whisper](https://github.com/SYSTRAN/faster-whisper)), and flashes when it hears
+(via [faster-whisper](https://pypi.org/project/faster-whisper/)), and flashes when it hears
 *um, uh, like, so, basically* or *you know*. The menu bar shows a running count.
 
 ## Privacy
@@ -35,11 +35,39 @@ Settings like the model, loudness gate and filler patterns are at the top of `um
 
 ## How it was built
 
-I first tried Cohere Transcribe, but it drops filler words from its output, so it can't be used here.
-`bakeoff.py` compares Whisper models on your own voice for filler recall and speed.
-On an Intel i7 CPU, `base.en` processes a chunk in about 0.5s and was the best fit for live use.
-`small.en` catches more fillers but is about 3x slower.
+Cohere Transcribe was the first choice, but it drops filler words, as most speech-to-text models
+do. Whisper keeps more of them when prompted with text that already contains fillers, so um0 uses
+Whisper with that kind of prompt.
+
+`bakeoff.py` compares Whisper models on a recording of your own voice:
 
 ```sh
 .venv/bin/python bakeoff.py --record 30
 ```
+
+### Speed vs. catching fillers
+
+Results on an Intel i7 Mac (CPU only), 30 seconds of natural speech:
+
+| Model | Time per chunk | Fillers caught |
+|---|---|---|
+| tiny.en | ~0.3–0.8s | 5 |
+| **base.en** (default) | **~0.5s** | **5** |
+| small.en | ~1.7s | 8 |
+
+Bigger models catch more fillers but take longer, which delays the flash. With `base.en`, the
+flash comes about 1–2 seconds after the filler. With `small.en`, it's about 2–4 seconds. um0
+defaults to the faster option so the flash still feels tied to the word. Change `MODEL` in `um0.py`
+to switch.
+
+### Matching the model to the hardware
+
+Faster hardware can run a bigger model live and catch more fillers. Only the Intel setup has been
+tested. The rest are suggested starting points.
+
+- **Intel Mac or CPU only:** `base.en` (this repo's default).
+- **Apple Silicon Mac:** `small.en` or `medium.en`.
+- **NVIDIA GPU:** [CrisperWhisper](https://huggingface.co/nyrahealth/faster_CrisperWhisper), which is
+  trained to keep fillers (non-commercial license).
+- **Cloud speech APIs:** some offer a filler-word option, but audio leaves the machine, so they
+  don't fit um0's local-only design.
