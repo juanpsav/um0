@@ -28,6 +28,7 @@ After that, it runs offline.
 ## Using it
 
 - **Menu bar:** live filler count, pause/resume (turns the mic off), reset count, flash brightness.
+- **Use headphones** on calls. Through speakers, the mic also hears the other people on the call, so their fillers set off the flash too.
 - `./run.sh --show-text` prints transcripts to the terminal (not saved) to help tune the filler rules.
 
 Settings like the model, loudness gate and filler patterns are at the top of `um0.py`.
